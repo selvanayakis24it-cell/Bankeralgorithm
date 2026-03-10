@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banker's Algorithm Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .card-header {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-header::before {
+            content: "●";
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-field label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .input-field input,
+        .input-field select {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .input-field input:focus,
+        .input-field select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(56, 239, 125, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+            color: white;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .matrix-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            background: white;
+        }
+
+        td input {
+            width: 60px;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+        }
+
+        td input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+
+        .highlight-row {
+            animation: highlightPulse 1s ease-in-out;
+            background: #fffacd !important;
+        }
+
+        @keyframes highlightPulse {
+            0%, 100% { background: white; }
+            50% { background: #fffacd; }
+        }
+
+        .result-panel {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 15px;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-safe {
+            background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+            border: 3px solid #38ef7d;
+        }
+
+        .result-unsafe {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+            border: 3px solid #ff6a00;
+        }
+
+        .result-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .safe-sequence {
+            font-size: 1.3em;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: center;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .process-arrow {
+            display: inline-block;
+            margin: 0 10px;
+            color: #667eea;
+            font-size: 1.5em;
+        }
+
+        .step-container {
+            margin-top: 20px;
+        }
+
+        .step {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .step-number {
+            font-weight: bold;
+            color: #667eea;
+            margin-right: 10px;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .resource-display {
+            display: inline-block;
+            padding: 8px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .close {
+            float: right;
+            font-size: 2em;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .explanation-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .explanation-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .explanation-box p {
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .input-group {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .badge-success {
+            background: #38ef7d;
+            color: white;
+        }
+
+        .badge-danger {
+            background: #ff6a00;
+            color: white;
+        }
+
+        .badge-info {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Banker's Algorithm Simulator</h1>
+            <p>Deadlock Avoidance in Operating Systems</p>
+        </div>
+
+        <!-- Configuration Card -->
+        <div class="card">
+            <div class="card-header">System Configuration</div>
+            <div class="input-group">
+                <div class="input-field">
+                    <label for="numProcesses">Number of Processes</label>
+                    <input type="number" id="numProcesses" min="1" max="10" value="5">
+                </div>
+                <div class="input-field">
+                    <label for="numResources">Number of Resource Types</label>
+                    <input type="number" id="numResources" min="1" max="10" value="3">
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="initializeMatrices()"> Initialize System</button>
+                <button class="btn btn-success" onclick="loadExampleData()">Load Example Data</button>
+                <button class="btn btn-secondary" onclick="resetAll()"> Reset All</button>
+            </div>
+        </div>
+
+        <!-- Matrices Input -->
+        <div class="grid-layout">
+            <!-- Allocation Matrix -->
+            <div class="card">
+                <div class="card-header">Allocation Matrix</div>
+                <div class="matrix-container" id="allocationMatrix"></div>
+            </div>
+
+            <!-- Maximum Matrix -->
+            <div class="card">
+                <div class="card-header">Maximum Matrix</div>
+                <div class="matrix-container" id="maximumMatrix"></div>
+            </div>
+        </div>
+
+        <!-- Available Resources -->
+        <div class="card">
+            <div class="card-header">Available Resources</div>
+            <div class="matrix-container" id="availableResources"></div>
+        </div>
+
+        <!-- Need Matrix (Auto-calculated) -->
+        <div class="card">
+            <div class="card-header">Need Matrix <span class="badge badge-info">Auto-calculated</span></div>
+            <div class="matrix-container" id="needMatrix"></div>
+        </div>
+
+        <!-- Safety Algorithm -->
+        <div class="card">
+            <div class="card-header">Safety Algorithm</div>
+            <button class="btn btn-primary btn-lg" onclick="checkSafeState()">Check Safe State</button>
+            <div id="safetyResult"></div>
+        </div>
+
+        <!-- Resource Request -->
+        <div class="card">
+            <div class="card-header">Resource Request Algorithm</div>
+            
+            <div style="margin-bottom: 30px;">
+                <div class="input-group">
+                    <div class="input-field">
+                        <label for="requestProcess">Select Process</label>
+                        <select id="requestProcess"></select>
+                    </div>
+                </div>
+                <div class="card-header" style="font-size: 1.2em; margin-top: 20px;">Request Vector</div>
+                <div class="matrix-container" id="requestVector"></div>
+                <div class="btn-group">
+                    <button class="btn btn-success" onclick="processRequest()">Submit Request</button>
+                </div>
+            </div>
+
+            <div id="requestResult"></div>
+
+            <div id="requestMatricesSection" style="display: none; margin-top: 30px; padding-top: 20px; border-top: 2px solid #667eea;">
+                <!-- Allocation Matrix for Request -->
+                <div class="card-header" style="font-size: 1.2em; margin-top: 20px;">Allocation Matrix (Request)</div>
+                <div class="matrix-container" id="requestAllocationMatrix"></div>
+
+                <!-- Maximum Matrix for Request -->
+                <div class="card-header" style="font-size: 1.2em; margin-top: 20px;">Maximum Matrix (Request)</div>
+                <div class="matrix-container" id="requestMaximumMatrix"></div>
+
+                <!-- Available Resources for Request -->
+                <div class="card-header" style="font-size: 1.2em; margin-top: 20px;">Available Resources (Request)</div>
+                <div class="matrix-container" id="requestAvailableResources"></div>
+
+                <!-- Need Matrix for Request (Auto-calculated) -->
+                <div class="card-header" style="font-size: 1.2em; margin-top: 20px;">Need Matrix (Request) <span class="badge badge-info">Auto-calculated</span></div>
+                <div class="matrix-container" id="requestNeedMatrix"></div>
+            </div>
+        </div>
+
+        <!-- Explanation Modal -->
+        <div id="explanationModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <h2 style="color: #667eea; margin-bottom: 20px;"> Banker's Algorithm Explanation</h2>
+                <div class="explanation-box">
+                    <h3>What is Banker's Algorithm?</h3>
+                    <p>The Banker's Algorithm is a deadlock avoidance algorithm that tests for safety by simulating the allocation of predetermined maximum possible amounts of all resources.</p>
+                </div>
+                <div class="explanation-box">
+                    <h3>Safety Algorithm Steps:</h3>
+                    <p><strong>Step 1:</strong> Initialize Work = Available and Finish[i] = false for all processes.</p>
+                    <p><strong>Step 2:</strong> Find a process i where Finish[i] = false and Need[i] ≤ Work.</p>
+                    <p><strong>Step 3:</strong> If found, Work = Work + Allocation[i] and Finish[i] = true. Go to Step 2.</p>
+                    <p><strong>Step 4:</strong> If all Finish[i] = true, the system is in a safe state.</p>
+                </div>
+                <div class="explanation-box">
+                    <h3>Resource Request Algorithm:</h3>
+                    <p><strong>Check 1:</strong> Request ≤ Need (Process is not requesting more than its declared need)</p>
+                    <p><strong>Check 2:</strong> Request ≤ Available (Resources are available)</p>
+                    <p><strong>Check 3:</strong> Temporarily allocate and run safety algorithm</p>
+                    <p><strong>Result:</strong> If safe, grant request. Otherwise, deny and rollback.</p>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <button class="btn btn-secondary" onclick="showExplanation()"> How It Works</button>
+        </div>
+    </div>
+
+    <script>
+        let numProcesses = 5;
+        let numResources = 3;
+        let allocation = [];
+        let maximum = [];
+        let available = [];
+        let need = [];
+        
+        // Request Algorithm specific matrices
+        let requestAllocation = [];
+        let requestMaximum = [];
+        let requestAvailable = [];
+        let requestNeed = [];
+
+        function initializeMatrices() {
+            numProcesses = parseInt(document.getElementById('numProcesses').value);
+            numResources = parseInt(document.getElementById('numResources').value);
+
+            // Initialize matrices with zeros
+            allocation = Array(numProcesses).fill(0).map(() => Array(numResources).fill(0));
+            maximum = Array(numProcesses).fill(0).map(() => Array(numResources).fill(0));
+            available = Array(numResources).fill(0);
+            need = Array(numProcesses).fill(0).map(() => Array(numResources).fill(0));
+
+            // Initialize request-specific matrices
+            requestAllocation = Array(numProcesses).fill(0).map(() => Array(numResources).fill(0));
+            requestMaximum = Array(numProcesses).fill(0).map(() => Array(numResources).fill(0));
+            requestAvailable = Array(numResources).fill(0);
+            requestNeed = Array(numProcesses).fill(0).map(() => Array(numResources).fill(0));
+
+            renderMatrices();
+            renderRequestMatrices();
+            calculateNeed();
+            calculateRequestNeed();
+            updateRequestProcessDropdown();
+            document.getElementById('safetyResult').innerHTML = '';
+            document.getElementById('requestResult').innerHTML = '';
+            document.getElementById('requestMatricesSection').style.display = 'none';
+        }
+
+        function renderMatrices() {
+            // Render Allocation Matrix
+            let html = '<table><thead><tr><th>Process</th>';
+            for (let j = 0; j < numResources; j++) {
+                html += `<th>R${j}</th>`;
+            }
+            html += '</tr></thead><tbody>';
+            for (let i = 0; i < numProcesses; i++) {
+                html += `<tr><td><strong>P${i}</strong></td>`;
+                for (let j = 0; j < numResources; j++) {
+                    html += `<td><input type="number" min="0" value="${allocation[i][j]}" 
+                            onchange="updateAllocation(${i}, ${j}, this.value)"></td>`;
+                }
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+            document.getElementById('allocationMatrix').innerHTML = html;
+
+            // Render Maximum Matrix
+            html = '<table><thead><tr><th>Process</th>';
+            for (let j = 0; j < numResources; j++) {
+                html += `<th>R${j}</th>`;
+            }
+            html += '</tr></thead><tbody>';
+            for (let i = 0; i < numProcesses; i++) {
+                html += `<tr><td><strong>P${i}</strong></td>`;
+                for (let j = 0; j < numResources; j++) {
+                    html += `<td><input type="number" min="0" value="${maximum[i][j]}" 
+                            onchange="updateMaximum(${i}, ${j}, this.value)"></td>`;
+                }
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+            document.getElementById('maximumMatrix').innerHTML = html;
+
+            // Render Available Resources
+            html = '<table><thead><tr>';
+            for (let j = 0; j < numResources; j++) {
+                html += `<th>R${j}</th>`;
+            }
+            html += '</tr></thead><tbody><tr>';
+            for (let j = 0; j < numResources; j++) {
+                html += `<td><input type="number" min="0" value="${available[j]}" 
+                        onchange="updateAvailable(${j}, this.value)"></td>`;
+            }
+            html += '</tr></tbody></table>';
+            document.getElementById('availableResources').innerHTML = html;
+
+            // Render Request Vector
+            html = '<table><thead><tr>';
+            for (let j = 0; j < numResources; j++) {
+                html += `<th>R${j}</th>`;
+            }
+            html += '</tr></thead><tbody><tr>';
+            for (let j = 0; j < numResources; j++) {
+                html += `<td><input type="number" id="request${j}" min="0" value="0"></td>`;
+            }
+            html += '</tr></tbody></table>';
+            document.getElementById('requestVector').innerHTML = html;
+        }
+
+        function updateAllocation(i, j, value) {
+            allocation[i][j] = parseInt(value) || 0;
+            calculateNeed();
+        }
+
+        function updateMaximum(i, j, value) {
+            maximum[i][j] = parseInt(value) || 0;
+            calculateNeed();
+        }
+
+        function updateAvailable(j, value) {
+            available[j] = parseInt(value) || 0;
+        }
+
+        function calculateNeed() {
+            for (let i = 0; i < numProcesses; i++) {
+                for (let j = 0; j < numResources; j++) {
+                    need[i][j] = maximum[i][j] - allocation[i][j];
+                }
+            }
+            renderNeedMatrix();
+        }
+
+        function validateSystemState(alloc, max, avail) {
+            const processCount = alloc.length;
+            const resourceCount = avail.length;
+
+            for (let i = 0; i < processCount; i++) {
+                if (!Array.isArray(alloc[i]) || !Array.isArray(max[i]) || alloc[i].length !== resourceCount || max[i].length !== resourceCount) {
+                    return { valid: false, message: `Matrix dimension mismatch at process P${i}.` };
+                }
+
+                for (let j = 0; j < resourceCount; j++) {
+                    if (alloc[i][j] < 0 || max[i][j] < 0 || avail[j] < 0) {
+                        return { valid: false, message: 'Negative values are not allowed.' };
+                    }
+
+                    if (alloc[i][j] > max[i][j]) {
+                        return {
+                            valid: false,
+                            message: `Invalid state: Allocation[P${i}][R${j}] cannot exceed Maximum[P${i}][R${j}].`
+                        };
+                    }
+                }
+            }
+
+            return { valid: true, message: '' };
+        }
+
+        function renderNeedMatrix() {
+            let html = '<table><thead><tr><th>Process</th>';
+            for (let j = 0; j < numResources; j++) {
+                html += `<th>R${j}</th>`;
+            }
+            html += '</tr></thead><tbody>';
+            for (let i = 0; i < numProcesses; i++) {
+                html += `<tr><td><strong>P${i}</strong></td>`;
+                for (let j = 0; j < numResources; j++) {
+                    html += `<td style="background: #f0f0f0;"><strong>${need[i][j]}</strong></td>`;
+                }
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+            document.getElementById('needMatrix').innerHTML = html;
+        }
+
+        function renderRequestMatrices() {
+            // Render Request Allocation Matrix
+            let html = '<table><thead><tr><th>Process</th>';
+            for (let j = 0; j < numResources; j++) {
+                html += `<th>R${j}</th>`;
+            }
+            html += '</tr></thead><tbody>';
+            for (let i = 0; i < numProcesses; i++) {
+                html += `<tr><td><strong>P${i}</strong></td>`;
+                for (let j = 0; j < numResources; j++) {
+                    html += `<td><input type="number" min="0" value="${requestAllocation[i][j]}" 
+                            onchange="updateRequestAllocation(${i}, ${j}, this.value)"></td>`;
+                }
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+            document.getElementById('requestAllocationMatrix').innerHTML = html;
+
+            // Render Request Maximum Matrix
+            html = '<table><thead><tr><th>Process</th>';
+            for (let j = 0; j < numResources; j++) {
+                html += `<th>R${j}</th>`;
+            }
+            html += '</tr></thead><tbody>';
+            for (let i = 0; i < numProcesses; i++) {
+                html += `<tr><td><strong>P${i}</strong></td>`;
+                for (let j = 0; j < numResources; j++) {
+                    html += `<td><input type="number" min="0" value="${requestMaximum[i][j]}" 
+                            onchange="updateRequestMaximum(${i}, ${j}, this.value)"></td>`;
+                }
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+            document.getElementById('requestMaximumMatrix').innerHTML = html;
+
+            // Render Request Available Resources
+            html = '<table><thead><tr>';
+            for (let j = 0; j < numResources; j++) {
+                html += `<th>R${j}</th>`;
+            }
+            html += '</tr></thead><tbody><tr>';
+            for (let j = 0; j < numResources; j++) {
+                html += `<td><input type="number" min="0" value="${requestAvailable[j]}" 
+                        onchange="updateRequestAvailable(${j}, this.value)"></td>`;
+            }
+            html += '</tr></tbody></table>';
+            document.getElementById('requestAvailableResources').innerHTML = html;
+
+            // Render Request Request Vector
+            html = '<table><thead><tr>';
+            for (let j = 0; j < numResources; j++) {
+                html += `<th>R${j}</th>`;
+            }
+            html += '</tr></thead><tbody><tr>';
+            for (let j = 0; j < numResources; j++) {
+                html += `<td><input type="number" id="request${j}" min="0" value="0"></td>`;
+            }
+            html += '</tr></tbody></table>';
+            document.getElementById('requestVector').innerHTML = html;
+        }
+
+        function updateRequestAllocation(i, j, value) {
+            requestAllocation[i][j] = parseInt(value) || 0;
+            calculateRequestNeed();
+        }
+
+        function updateRequestMaximum(i, j, value) {
+            requestMaximum[i][j] = parseInt(value) || 0;
+            calculateRequestNeed();
+        }
+
+        function updateRequestAvailable(j, value) {
+            requestAvailable[j] = parseInt(value) || 0;
+        }
+
+        function calculateRequestNeed() {
+            for (let i = 0; i < numProcesses; i++) {
+                for (let j = 0; j < numResources; j++) {
+                    requestNeed[i][j] = requestMaximum[i][j] - requestAllocation[i][j];
+                }
+            }
+            renderRequestNeedMatrix();
+        }
+
+        function renderRequestNeedMatrix() {
+            let html = '<table><thead><tr><th>Process</th>';
+            for (let j = 0; j < numResources; j++) {
+                html += `<th>R${j}</th>`;
+            }
+            html += '</tr></thead><tbody>';
+            for (let i = 0; i < numProcesses; i++) {
+                html += `<tr><td><strong>P${i}</strong></td>`;
+                for (let j = 0; j < numResources; j++) {
+                    html += `<td style="background: #f0f0f0;"><strong>${requestNeed[i][j]}</strong></td>`;
+                }
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+            document.getElementById('requestNeedMatrix').innerHTML = html;
+        }
+
+        function checkSafeState() {
+            const stateValidation = validateSystemState(allocation, maximum, available);
+            if (!stateValidation.valid) {
+                displaySafetyResult({
+                    safe: false,
+                    sequence: [],
+                    steps: [stateValidation.message]
+                });
+                return;
+            }
+
+            const result = safetyAlgorithm(allocation, need, available);
+            displaySafetyResult(result);
+        }
+
+        function safetyAlgorithm(alloc, needMatrix, avail) {
+            const processCount = alloc.length;
+            const resourceCount = avail.length;
+            const work = [...avail];
+            const finish = Array(processCount).fill(false);
+            const safeSequence = [];
+            const steps = [];
+            let count = 0;
+            let scanStart = 0;
+
+            steps.push(`<strong>Initial State:</strong> Work = [${work.join(', ')}]`);
+
+            while (count < processCount) {
+                let found = false;
+                for (let k = 0; k < processCount; k++) {
+                    const i = (scanStart + k) % processCount;
+                    if (!finish[i]) {
+                        let canAllocate = true;
+                        for (let j = 0; j < resourceCount; j++) {
+                            if (needMatrix[i][j] > work[j]) {
+                                canAllocate = false;
+                                break;
+                            }
+                        }
+
+                        if (canAllocate) {
+                            steps.push(`<strong>Step ${count + 1}:</strong> Process P${i} can be allocated. Need[${i}] = [${needMatrix[i].join(', ')}] ≤ Work = [${work.join(', ')}]`);
+                            
+                            for (let j = 0; j < resourceCount; j++) {
+                                work[j] += alloc[i][j];
+                            }
+                            
+                            steps.push(`After P${i} completes: Work = [${work.join(', ')}]`);
+                            
+                            finish[i] = true;
+                            safeSequence.push(i);
+                            found = true;
+                            count++;
+                            scanStart = (i + 1) % processCount;
+                            break;
+                        }
+                    }
+                }
+
+                if (!found) {
+                    return { safe: false, sequence: [], steps };
+                }
+            }
+
+            return { safe: true, sequence: safeSequence, steps };
+        }
+
+        function displaySafetyResult(result) {
+            let html = '<div class="result-panel ' + (result.safe ? 'result-safe' : 'result-unsafe') + '">';
+            
+            if (result.safe) {
+                html += '<div class="result-title">System is in SAFE State!</div>';
+                html += '<div class="safe-sequence">Safe Sequence: ';
+                html += result.sequence.map(p => `<strong>P${p}</strong>`).join('<span class="process-arrow">→</span>');
+                html += '</div>';
+            } else {
+                html += '<div class="result-title"> System is NOT in Safe State!</div>';
+                html += '<p style="font-size: 1.2em; margin-top: 10px;">Deadlock may occur. Cannot find a safe sequence.</p>';
+            }
+
+            html += '</div>';
+
+            document.getElementById('safetyResult').innerHTML = html;
+        }
+
+        function updateRequestProcessDropdown() {
+            let html = '';
+            for (let i = 0; i < numProcesses; i++) {
+                html += `<option value="${i}">P${i}</option>`;
+            }
+            document.getElementById('requestProcess').innerHTML = html;
+        }
+
+        function processRequest() {
+            const processId = parseInt(document.getElementById('requestProcess').value);
+            const request = [];
+            
+            for (let j = 0; j < numResources; j++) {
+                request[j] = parseInt(document.getElementById(`request${j}`).value) || 0;
+            }
+
+            // Show the matrices section when request is submitted
+            document.getElementById('requestMatricesSection').style.display = 'block';
+
+            let output = `Resource Request Algorithm\n\n`;
+            let html = '<div class="result-panel">';
+
+            // READ DATA
+            let alloc = requestAllocation.map(row => [...row]);
+            let max = requestMaximum.map(row => [...row]);
+            let avail = [...requestAvailable];
+            let need = requestNeed.map(row => [...row]);
+
+            output += `Process P${processId} Request = (${request.join(',')})\n\n`;
+            html += `<p><strong>Process P${processId} Request = [${request.join(', ')}]</strong></p>`;
+
+            // CHECK 1: Request <= Need
+            html += `<div class="step">`;
+            html += `<span class="step-number">Step 1:</span> Check if Request ≤ Need<br>`;
+            
+            let check1Passed = true;
+            for (let j = 0; j < numResources; j++) {
+                html += `R${j}: ${request[j]} ≤ ${need[processId][j]} ? `;
+                if (request[j] > need[processId][j]) {
+                    html += `<span class="badge badge-danger">✗</span><br>`;
+                    check1Passed = false;
+                } else {
+                    html += `<span class="badge badge-success">✓</span><br>`;
+                }
+            }
+            html += `</div>`;
+
+            if (!check1Passed) {
+                output += "Request exceeds Need → ERROR";
+                html += '<div class="result-panel result-unsafe">';
+                html += '<div class="result-title">Request DENIED</div>';
+                html += '<p>Request exceeds Need - Process is asking for more than declared maximum.</p>';
+                html += '</div>';
+                document.getElementById('requestResult').innerHTML = html + '</div>';
+                return;
+            }
+
+            output += "Step 1: Request ≤ Need ✔\n";
+
+            // CHECK 2: Request <= Available
+            html += `<div class="step">`;
+            html += `<span class="step-number">Step 2:</span> Check if Request ≤ Available<br>`;
+            
+            let check2Passed = true;
+            for (let j = 0; j < numResources; j++) {
+                html += `R${j}: ${request[j]} ≤ ${avail[j]} ? `;
+                if (request[j] > avail[j]) {
+                    html += `<span class="badge badge-danger">✗</span><br>`;
+                    check2Passed = false;
+                } else {
+                    html += `<span class="badge badge-success">✓</span><br>`;
+                }
+            }
+            html += `</div>`;
+
+            if (!check2Passed) {
+                output += "Step 2: Request > Available → Process must wait";
+                html += '<div class="result-panel result-unsafe">';
+                html += '<div class="result-title">Request DENIED (Waiting)</div>';
+                html += '<p>Resources are not currently available. Process must wait.</p>';
+                html += '</div>';
+                document.getElementById('requestResult').innerHTML = html + '</div>';
+                return;
+            }
+
+            output += "Step 2: Request ≤ Available ✔\n";
+
+            // STEP 3: Temporarily allocate resources
+            html += `<div class="step">`;
+            html += `<span class="step-number">Step 3:</span> Tentatively allocate resources<br>`;
+            
+            for (let j = 0; j < numResources; j++) {
+                avail[j] -= request[j];
+                alloc[processId][j] += request[j];
+                need[processId][j] -= request[j];
+            }
+
+            html += `New Allocation[P${processId}]: [${alloc[processId].join(', ')}]<br>`;
+            html += `New Available: [${avail.join(', ')}]<br>`;
+            html += `New Need[P${processId}]: [${need[processId].join(', ')}]`;
+            html += `</div>`;
+
+            output += "Resources temporarily allocated\n\n";
+
+            // STEP 4: Run Safety Algorithm on temporary state
+            html += `<div class="step">`;
+            html += `<span class="step-number">Step 4:</span> Run Safety Algorithm on new state<br>`;
+            
+            const result = safetyAlgorithm(alloc, need, avail);
+
+            if (result.safe) {
+                html += `<span class="badge badge-success">✓ System remains SAFE</span><br>`;
+                html += `Safe Sequence: ${result.sequence.map(p => `<strong>P${p}</strong>`).join('<span class="process-arrow">→</span>')}`;
+                html += `</div>`;
+
+                // Grant request
+                requestAllocation = alloc;
+                requestAvailable = avail;
+                requestNeed = need;
+                renderRequestMatrices();
+                calculateRequestNeed();
+
+                output += "System remains SAFE\n";
+                output += `Safe Sequence : ${result.sequence.map(p => 'P' + p).join(' → ')}\n`;
+                output += "Request GRANTED";
+
+                html += '<div class="result-panel result-safe">';
+                html += '<div class="result-title">Request GRANTED!</div>';
+                html += '<p>Resources allocated successfully. System maintains safe state.</p>';
+                html += '</div>';
+
+            } else {
+                html += `<span class="badge badge-danger">✗ System would become UNSAFE</span>`;
+                html += `</div>`;
+
+                output += "System becomes UNSAFE\n";
+                output += "Request DENIED";
+
+                html += '<div class="result-panel result-unsafe">';
+                html += '<div class="result-title">Request DENIED!</div>';
+                html += '<p>Granting this request would lead to an unsafe state. Request is denied to prevent potential deadlock.</p>';
+                html += '</div>';
+            }
+
+            html += '</div>';
+            document.getElementById('requestResult').innerHTML = html;
+        }
+
+      function loadExampleData() {
+    numProcesses = 5;
+    numResources = 3;
+    document.getElementById('numProcesses').value = 5;
+    document.getElementById('numResources').value = 3;
+
+    allocation = [
+        [0,1,0],
+        [2,0,0],
+        [3,0,2],
+        [2,1,1],
+        [0,0,2]
+    ];
+
+    maximum = [
+        [7,5,3],
+        [3,2,2],
+        [9,0,2],
+        [2,2,2],
+        [4,3,3]
+    ];
+
+    available = [3,3,2];
+
+    // Load same data to request matrices
+    requestAllocation = allocation.map(row => [...row]);
+    requestMaximum = maximum.map(row => [...row]);
+    requestAvailable = [...available];
+
+    renderMatrices();
+    renderRequestMatrices();
+    calculateNeed();
+    calculateRequestNeed();
+    updateRequestProcessDropdown();
+
+    document.getElementById('safetyResult').innerHTML = '';
+    document.getElementById('requestResult').innerHTML = '';
+    document.getElementById('requestMatricesSection').style.display = 'none';
+}
+
+        function resetAll() {
+            document.getElementById('safetyResult').innerHTML = '';
+            document.getElementById('requestResult').innerHTML = '';
+            document.getElementById('requestMatricesSection').style.display = 'none';
+            allocation = Array(numProcesses).fill(0).map(() => Array(numResources).fill(0));
+            maximum = Array(numProcesses).fill(0).map(() => Array(numResources).fill(0));
+            available = Array(numResources).fill(0);
+            
+            // Reset request matrices too
+            requestAllocation = Array(numProcesses).fill(0).map(() => Array(numResources).fill(0));
+            requestMaximum = Array(numProcesses).fill(0).map(() => Array(numResources).fill(0));
+            requestAvailable = Array(numResources).fill(0);
+            
+            renderMatrices();
+            renderRequestMatrices();
+            calculateNeed();
+            calculateRequestNeed();
+        }
+
+        function showExplanation() {
+            document.getElementById('explanationModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('explanationModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('explanationModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            initializeMatrices();
+        };
+    </script>
+</body>
+</html>
